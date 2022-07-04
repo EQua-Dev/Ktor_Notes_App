@@ -3,7 +3,10 @@ package com.androidstrike.androidstrike.ktornotesapp.di
 import android.content.Context
 import androidx.room.Room
 import com.androidstrike.androidstrike.ktornotesapp.data.local.NoteDatabase
+import com.androidstrike.androidstrike.ktornotesapp.data.local.dao.NoteDao
 import com.androidstrike.androidstrike.ktornotesapp.data.remote.NoteApi
+import com.androidstrike.androidstrike.ktornotesapp.repositories.NoteRepo
+import com.androidstrike.androidstrike.ktornotesapp.repositories.NoteRepoImpl
 import com.androidstrike.androidstrike.ktornotesapp.utils.Constants.BASE_URL
 import com.androidstrike.androidstrike.ktornotesapp.utils.Constants.LOCAL_DB_NAME
 import com.androidstrike.androidstrike.ktornotesapp.utils.SessionManager
@@ -75,6 +78,19 @@ object AppModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(NoteApi::class.java)
+    }
+
+    //provide note repo returning the implementation parameters
+    @Singleton
+    @Provides
+    fun providesNoteRepo(
+        noteApi: NoteApi,
+        noteDao: NoteDao,
+        sessionManager: SessionManager
+    ): NoteRepo{
+        return NoteRepoImpl(
+            noteApi, noteDao, sessionManager
+        )
     }
 
 }
