@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/allNotes">
+
+    <fragment
+        android:id="@+id/allNotes"
+        android:name="com.androidstrike.androidstrike.ktornotesapp.ui.notes.AllNotes"
+        android:label="AllNotes" >
+        <action
+            android:id="@+id/action_allNotes_to_newNote"
+            app:destination="@id/newNote" />
+        <action
+            android:id="@+id/action_allNotes_to_userInfo"
+            app:destination="@id/userInfo" />
+    </fragment>
+    <fragment
+        android:id="@+id/newNote"
+        android:name="com.androidstrike.androidstrike.ktornotesapp.ui.notes.NewNote"
+        android:label="NewNote" >
+        <argument
+            android:name="note"
+            app:argType="com.androidstrike.androidstrike.ktornotesapp.data.local.models.LocalNote"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <fragment
+        android:id="@+id/userInfo"
+        android:name="com.androidstrike.androidstrike.ktornotesapp.ui.account.UserInfo"
+        android:label="UserInfo" >
+        <action
+            android:id="@+id/action_userInfo_to_createAccount"
+            app:destination="@id/createAccount" />
+        <action
+            android:id="@+id/action_userInfo_to_login"
+            app:destination="@id/login" />
+    </fragment>
+    <fragment
+        android:id="@+id/createAccount"
+        android:name="com.androidstrike.androidstrike.ktornotesapp.ui.account.CreateAccount"
+        android:label="CreateAccount" />
+    <fragment
+        android:id="@+id/login"
+        android:name="com.androidstrike.androidstrike.ktornotesapp.ui.account.Login"
+        android:label="Login" />
+</navigation>

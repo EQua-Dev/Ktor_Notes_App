@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/drawable/edittext_background.xml" value="0.1785" />
+        <entry key="app/src/main/res/drawable/not_sync.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.14175724637681159" />
         <entry key="app/src/main/res/layout/fragment_all_notes.xml" value="0.14175724637681159" />
         <entry key="app/src/main/res/layout/fragment_create_account.xml" value="0.14175724637681159" />
@@ -11,6 +12,7 @@
         <entry key="app/src/main/res/layout/fragment_new_note.xml" value="0.14175724637681159" />
         <entry key="app/src/main/res/layout/fragment_user_info.xml" value="0.14175724637681159" />
         <entry key="app/src/main/res/layout/item_note.xml" value="0.14175724637681159" />
+        <entry key="app/src/main/res/menu/main_menu.xml" value="0.1" />
       </map>
     </option>
   </component>

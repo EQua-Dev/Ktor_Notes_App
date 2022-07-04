@@ -2,6 +2,7 @@ package com.androidstrike.androidstrike.ktornotesapp.data.local.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -21,4 +22,4 @@ data class LocalNote(
     var locallyDeleted: Boolean = false, //because if note is deleted when internet !connected
     @PrimaryKey(autoGenerate = false)
     var noteId: String = UUID.randomUUID().toString()
-)
+): Serializable
