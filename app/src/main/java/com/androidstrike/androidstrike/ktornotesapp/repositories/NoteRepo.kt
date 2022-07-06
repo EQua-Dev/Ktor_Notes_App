@@ -24,6 +24,7 @@ interface NoteRepo {
     suspend fun updateNote(note: LocalNote) : Result<String>
     fun getAllNotes(): Flow<List<LocalNote>>
     suspend fun getAllNotesFromServer() //will not return anything because we are saving the response in db
+    suspend fun deleteNote(noteId: String)
 
 
 }

@@ -183,9 +183,12 @@ class NoteRepoImpl @Inject constructor(
         }
     }
 
+    //function to get all notes saved  in local db
     override fun getAllNotes(): Flow<List<LocalNote>> = noteDao.getAllNotesOrderByDate()
 
+    //function to get all notes saved in the cloud db
     override suspend fun getAllNotesFromServer() {
+        //if the user is not logged in, do nothing
         val token = sessionManager.getJwtToken() ?: return
         try{
             if (!isNetworkConnected(sessionManager.context)) { //if there is no internet connection
@@ -210,5 +213,35 @@ class NoteRepoImpl @Inject constructor(
             e.printStackTrace()
         }
 
+    }
+
+    //function to delete a selected note
+    override suspend fun deleteNote(noteId: String) {
+        try {
+            //update the status of the note to be locally deleted
+            noteDao.deleteNoteLocally(noteId)
+            //if user is not logged in, delete the note from the local db
+            val token = sessionManager.getJwtToken() ?: kotlin.run {
+                noteDao.deleteNote(noteId)
+                return
+            }
+            if (!isNetworkConnected(sessionManager.context)) { //if there is no internet connection
+                return
+            }
+
+            //if user is logged in, make the network call to delete the note from cloud db
+            val response = noteApi.deleteNote(
+                "Bearer $token",
+                noteId
+            )
+
+            //delete note from local db if deleted from cloud db
+            if (response.success){
+                noteDao.deleteNote(noteId)
+            }
+
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
     }
 }

@@ -86,9 +86,9 @@ class NewNote: Fragment(R.layout.fragment_new_note) {
         val noteTitle = binding?.newNoteTitleEditText?.text.toString().trim()
         val description = binding?.newNoteDescriptionEditText?.text.toString().trim()
 
-        //null error handling
+        //if the content of the note is deleted, we implement the 'delete note' function from the view model
         if (noteTitle.isNullOrEmpty() && description.isNullOrEmpty()){
-            // todo: delete note
+            noteViewModel.deleteNote(noteViewModel.oldNote!!.noteId)
             return
         }
 

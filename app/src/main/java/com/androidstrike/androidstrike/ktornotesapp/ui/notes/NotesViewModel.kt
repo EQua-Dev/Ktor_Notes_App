@@ -59,6 +59,18 @@ class NotesViewModel @Inject constructor(
         noteRepo.updateNote(note)
     }
 
+    fun deleteNote(
+        noteId: String
+    ) = viewModelScope.launch {
+        noteRepo.deleteNote(noteId)
+    }
+
+    fun undoDelete(
+        note: LocalNote
+    ) = viewModelScope.launch {
+        noteRepo.createNote(note)
+    }
+
     //function to convert time in milliseconds to readable date
     fun milliToDate(time: Long): String{
         val date = Date(time)
