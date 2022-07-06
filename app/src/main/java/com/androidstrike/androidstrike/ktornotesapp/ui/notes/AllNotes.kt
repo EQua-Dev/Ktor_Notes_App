@@ -1,10 +1,10 @@
 package com.androidstrike.androidstrike.ktornotesapp.ui.notes
 
-import android.app.ProgressDialog.show
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +19,7 @@ import com.androidstrike.androidstrike.ktornotesapp.ui.adapter.NoteAdapter
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -51,6 +52,9 @@ class AllNotes: Fragment(R.layout.fragment_all_notes) {
 
         setUpRecyclerView()
         subscribeToNotes()
+        setUpSwipeLayout()
+
+        notesViewModel.syncNotes()
 
     }
 
@@ -76,7 +80,18 @@ class AllNotes: Fragment(R.layout.fragment_all_notes) {
     //function to update the recycler view notes list
     private fun subscribeToNotes() = lifecycleScope.launch{
         notesViewModel.notes.collect {
-            noteAdapter.notes = it
+            noteAdapter.notes = it.filter { localNote ->
+                localNote.noteTitle?.contains(notesViewModel.searchQuery, true) == true ||
+                        localNote.description?.contains(notesViewModel.searchQuery, true) == true
+            }
+        }
+    }
+
+    private fun setUpSwipeLayout(){
+        binding?.swipeRefeeshLayout?.setOnRefreshListener {
+            notesViewModel.syncNotes {
+                binding?.swipeRefeeshLayout?.isRefreshing = false
+            }
         }
     }
 
@@ -141,6 +156,51 @@ class AllNotes: Fragment(R.layout.fragment_all_notes) {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.main_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
+
+        val item = menu.findItem(R.id.search)
+        val searchView = item.actionView as android.widget.SearchView
+
+        item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener{
+            override fun onMenuItemActionExpand(p0: MenuItem?): Boolean {
+                notesViewModel.searchQuery = ""
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(p0: MenuItem?): Boolean {
+                notesViewModel.searchQuery = ""
+                return true
+            }
+
+        })
+
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+            android.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let { //search the entered characters when searched
+                    searchNotes(it)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                newText?.let { //search the entered characters when searched in real time
+                    searchNotes(it)
+                }
+                return true
+            }
+
+        })
+
+    }
+
+    //function to actually search the notes with the entered search characters that match saved notes
+    private fun searchNotes(query: String) = lifecycleScope.launch{
+        notesViewModel.searchQuery = query
+        noteAdapter.notes = notesViewModel.notes.first().filter {
+            it.noteTitle?.contains(query, true) == true ||
+                    it.description?.contains(query, true) == true
+        }
     }
 
     //set up menu click options

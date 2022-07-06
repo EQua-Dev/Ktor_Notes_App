@@ -25,6 +25,15 @@ class NotesViewModel @Inject constructor(
 
     var notes = noteRepo.getAllNotes()
     var oldNote: LocalNote? = null
+    var searchQuery: String = ""
+
+    fun syncNotes(
+        onDone: (() -> Unit)? = null
+    ) = viewModelScope.launch {
+
+        noteRepo.syncNotes()
+        onDone?.invoke()
+    }
 
     //function to create a new note
     fun createNote(

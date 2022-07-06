@@ -244,4 +244,37 @@ class NoteRepoImpl @Inject constructor(
             e.printStackTrace()
         }
     }
+
+    //function to sync notes to cloud db
+    override suspend fun syncNotes() {
+        try {
+            //check f user is logged in
+            sessionManager.getJwtToken() ?: return
+            if (!isNetworkConnected(sessionManager.context)) { //if there is no internet connection
+                return
+            }
+
+            //get the notes marked for deletion in the local db and delete them
+            val locallyDeletedNotes = noteDao.getAllLocallyDeletedNotes()
+            locallyDeletedNotes.forEach {
+                deleteNote(it.noteId)
+            }
+
+            // write the newly created notes to the cloud
+            val notConnectedNotes = noteDao.getAllLocalNotes()
+            notConnectedNotes.forEach {
+                createNote(it)
+            }
+
+            //update the updated notes to the cloud
+            val notUpdatedNotes = noteDao.getAllLocalNotes()
+            notUpdatedNotes.forEach {
+                updateNote(it)
+            }
+
+
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
+    }
 }
