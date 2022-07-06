@@ -23,6 +23,7 @@ class NotesViewModel @Inject constructor(
     val noteRepo: NoteRepo
 ): ViewModel() {
 
+    var notes = noteRepo.getAllNotes()
     var oldNote: LocalNote? = null
 
     //function to create a new note

@@ -36,7 +36,7 @@ interface NoteApi {
 
     //CREATE NOTE
     @Headers("Content-Type: application/json")
-    @POST("$API_VERSION/notes/create")
+    @POST("$API_VERSION/notes/new_note")
     suspend fun createNote(
         //todo include header at the retrofit initialisation build just like Belal Khan taught
         @Header("Authorization") token: String,

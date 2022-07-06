@@ -8,6 +8,7 @@ import com.androidstrike.androidstrike.ktornotesapp.data.remote.models.User
 import com.androidstrike.androidstrike.ktornotesapp.utils.Result
 import com.androidstrike.androidstrike.ktornotesapp.utils.SessionManager
 import com.androidstrike.androidstrike.ktornotesapp.utils.isNetworkConnected
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
@@ -57,6 +58,7 @@ class NoteRepoImpl @Inject constructor(
             if (result.success) {
                 //save details in the data store
                 sessionManager.updateSession(result.message, user.name ?: "", user.email)
+                getAllNotesFromServer() //get notes from server for specific user once user logs in
                 Result.Success("Logged In Successfully!")
             } else {
                 Result.Error<String>(result.message)
@@ -102,15 +104,18 @@ class NoteRepoImpl @Inject constructor(
     //function to create a new note
     override suspend fun createNote(note: LocalNote): Result<String> {
 
-        return try {
+        try {
             //first insert the new note into local db
             noteDao.insertNote(note)
             val token = sessionManager.getJwtToken() //fetch jwt token
 
-            if (token == null){
-                //if the user is not logged in
-                Result.Success("Note is Saved in Local Database")
+            //if (token == null){
+            //if the user is not logged in
+                ?: return Result.Success("Note is Saved in Local Database")
+            if (!isNetworkConnected(sessionManager.context)){ //check internet connection
+                return Result.Error("No Internet Connection")
             }
+            //}
 
             //push the note to the cloud db
             val result = noteApi.createNote(
@@ -124,30 +129,34 @@ class NoteRepoImpl @Inject constructor(
             )
 
             //if pushed to the cloud db, update the 'connected' attribute in local db
-            if (result.success){
+            return if (result.success) {
                 noteDao.insertNote(note.also { it.connected = true })
-                    Result.Success("Note Saved Successfully!")
-                }else{
-                    Result.Error(result.message)
+                Result.Success("Note Saved Successfully!")
+            } else {
+                Result.Error(result.message)
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
-            Result.Error(e.message ?: "Some Error Occurred!")
+            return Result.Error(e.message ?: "Some Error Occurred!")
 
         }
     }
 
     //function to create a new note
     override suspend fun updateNote(note: LocalNote): Result<String> {
-        return try {
+        try {
             //first insert the updated note into local db
             noteDao.insertNote(note)
             val token = sessionManager.getJwtToken()
 
-            if (token == null){
-                //if the user is not logged in
-                Result.Success("Note is Updated in Local Database")
+            //if (token == null){
+            //if the user is not logged in
+                ?: return Result.Success("Note is Updated in Local Database")
+            if (!isNetworkConnected(sessionManager.context)){ //check internet connection
+                return Result.Error("No Internet Connection")
             }
+
+            //}
 
             //push the updated note to the cloud db
             val result = noteApi.updateNote(
@@ -161,15 +170,45 @@ class NoteRepoImpl @Inject constructor(
             )
 
             //if pushed to the cloud db, update the 'connected' attribute in local db
-            if (result.success){
+            return if (result.success) {
                 noteDao.insertNote(note.also { it.connected = true })
                 Result.Success("Note Updated Successfully!")
-            }else{
+            } else {
                 Result.Error(result.message)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return Result.Error(e.message ?: "Some Error Occurred!")
+
+        }
+    }
+
+    override fun getAllNotes(): Flow<List<LocalNote>> = noteDao.getAllNotesOrderByDate()
+
+    override suspend fun getAllNotesFromServer() {
+        val token = sessionManager.getJwtToken() ?: return
+        try{
+            if (!isNetworkConnected(sessionManager.context)) { //if there is no internet connection
+                return
+            }
+
+            //make network call to fetch notes from server
+            val result = noteApi.getNotes("Bearer $token")
+            result.forEach { remoteNote ->
+                //insert each note into the local db
+                noteDao.insertNote(
+                    LocalNote(
+                        noteTitle = remoteNote.noteTitle,
+                        description = remoteNote.description,
+                        date = remoteNote.date,
+                        connected = true,
+                        noteId = remoteNote.id
+                    )
+                )
             }
         }catch (e: Exception){
             e.printStackTrace()
-            Result.Error(e.message ?: "Some Error Occurred!")
+        }
 
-        }    }
+    }
 }

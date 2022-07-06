@@ -4,10 +4,17 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.androidstrike.androidstrike.ktornotesapp.R
 import com.androidstrike.androidstrike.ktornotesapp.databinding.FragmentAllNotesBinding
 import com.androidstrike.androidstrike.ktornotesapp.databinding.FragmentCreateAccountBinding
+import com.androidstrike.androidstrike.ktornotesapp.ui.adapter.NoteAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * Created by Richard Uzor  on 02/07/2022
@@ -15,12 +22,17 @@ import com.androidstrike.androidstrike.ktornotesapp.databinding.FragmentCreateAc
 /**
  * Created by Richard Uzor  on 02/07/2022
  */
+@AndroidEntryPoint
 class AllNotes: Fragment(R.layout.fragment_all_notes) {
 
 
     private var _binding: FragmentAllNotesBinding? = null
     val binding: FragmentAllNotesBinding?
         get() = _binding //we use this get method for the binding cos we want the binding to initialize only when called
+
+    private lateinit var noteAdapter: NoteAdapter
+    private val notesViewModel: NotesViewModel by activityViewModels()
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -32,6 +44,31 @@ class AllNotes: Fragment(R.layout.fragment_all_notes) {
             findNavController().navigate(R.id.action_allNotes_to_newNote)
         }
 
+        setUpRecyclerView()
+        subscribeToNotes()
+
+    }
+
+    //function to set up views and logic for the recycler view UI
+    private fun setUpRecyclerView(){
+        noteAdapter = NoteAdapter()
+        noteAdapter.setOnItemClickListener {
+
+            val action = AllNotesDirections.actionAllNotesToNewNote(it)
+            findNavController().navigate(action)
+
+        }
+        binding?.noteRecyclerView?.apply {
+            adapter = noteAdapter
+            layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        }
+    }
+
+    //function to update the recycler view notes list
+    private fun subscribeToNotes() = lifecycleScope.launch{
+        notesViewModel.notes.collect {
+            noteAdapter.notes = it
+        }
     }
 
     override fun onCreateView(
